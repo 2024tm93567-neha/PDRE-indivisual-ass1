@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FreshCheck — Prototype</title>
+<style>
+  :root {
+    --green: #2E7D32;
+    --green-light: #4CAF50;
+    --amber: #FF9800;
+    --red: #E53935;
+    --bg: #F5F7F5;
+    --card: #FFFFFF;
+    --text: #212121;
+    --text-secondary: #757575;
+    --border: #E0E0E0;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .phone-frame {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 40px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    border: 8px solid #333;
+  }
+
+  .screen {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    animation: fadeIn 0.25s ease;
+  }
+
+  .screen.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--bg);
+  }
+
+  .status-bar .time { font-size: 15px; font-weight: 700; }
+  .status-bar .icons { display: flex; gap: 4px; font-size: 13px; }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px 12px;
+    background: var(--bg);
+  }
+
+  .header h1 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--green);
+    letter-spacing: -0.5px;
+  }
+
+  .header h1 span { color: var(--text); }
+  .header-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--green);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* Sub header */
+  .sub-header {
+    padding: 0 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sub-header p { color: var(--text-secondary); font-size: 14px; }
+
+  /* Alert banner */
+  .alert-banner {
+    margin: 0 16px 12px;
+    background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+    border-left: 4px solid var(--amber);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+
+  .alert-banner .alert-icon { font-size: 22px; }
+  .alert-banner .alert-text { font-size: 13px; color: #E65100; font-weight: 500; }
+  .alert-banner .alert-count {
+    margin-left: auto;
+    background: var(--amber);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  /* Location tabs */
+  .location-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px 12px;
+    overflow-x: auto;
+  }
+
+  .location-tab {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1.5px solid var(--border);
+    background: white;
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  .location-tab.active {
+    background: var(--green);
+    color: white;
+    border-color: var(--green);
+  }
+
+  /* Item list */
+  .item-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px 80px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary);
+    padding: 8px 0 6px;
+  }
+
+  .item-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+
+  .item-card:active { transform: scale(0.98); }
+
+  .item-emoji { font-size: 28px; }
+
+  .item-info { flex: 1; }
+  .item-name { font-size: 15px; font-weight: 600; color: var(--text); }
+  .item-meta { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+  .expiry-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .expiry-red { background: #FFEBEE; color: var(--red); }
+  .expiry-amber { background: #FFF3E0; color: #E65100; }
+  .expiry-green { background: #E8F5E9; color: var(--green); }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px 0 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer;
+    padding: 4px 12px;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+
+  .nav-item .nav-icon { font-size: 22px; }
+  .nav-item .nav-label { font-size: 10px; font-weight: 600; color: var(--text-secondary); }
+  .nav-item.active .nav-label { color: var(--green); }
+
+  .nav-add {
+    width: 52px; height: 52px;
+    background: var(--green);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+    margin-top: -20px;
+    box-shadow: 0 4px 12px rgba(46,125,50,0.3);
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+
+  .nav-add:active { transform: scale(0.92); }
+
+  /* Add Item Screen */
+  .screen-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    gap: 12px;
+    background: var(--bg);
+  }
+
+  .back-btn {
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--green);
+    font-weight: 500;
+    padding: 4px;
+  }
+
+  .screen-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .form-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 20px 100px;
+  }
+
+  .form-group { margin-bottom: 18px; }
+  .form-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 15px;
+    color: var(--text);
+    background: white;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus { border-color: var(--green); }
+  .form-input::placeholder { color: #BDBDBD; }
+
+  .autocomplete-list {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    margin-top: -2px;
+    display: none;
+  }
+
+  .autocomplete-list.show { display: block; }
+
+  .autocomplete-item {
+    padding: 10px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .autocomplete-item:hover { background: #F5F5F5; }
+
+  .storage-options {
+    display: flex;
+    gap: 8px;
+  }
+
+  .storage-option {
+    flex: 1;
+    padding: 12px 8px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+  }
+
+  .storage-option.selected {
+    border-color: var(--green);
+    background: #E8F5E9;
+  }
+
+  .storage-option .storage-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+  .storage-option .storage-name { font-size: 12px; font-weight: 600; color: var(--text); }
+
+  .date-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .date-row .form-group { flex: 1; }
+
+  .quick-expiry {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+
+  .quick-chip {
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #F5F5F5;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .quick-chip.selected {
+    background: var(--green);
+    color: white;
+  }
+
+  .qty-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .qty-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: white;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--green);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .qty-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    min-width: 30px;
+    text-align: center;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    background: var(--green);
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .submit-btn:active { transform: scale(0.98); background: var(--green-light); }
+
+  /* Stats Screen */
+  .stats-summary {
+    display: flex;
+    gap: 10px;
+    padding: 0 16px 16px;
+  }
+
+  .stat-card {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    padding: 14px 12px;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+
+  .stat-value { font-size: 28px; font-weight: 800; }
+  .stat-label { font-size: 11px; color: var(--text-secondary); font-weight: 600; margin-top: 2px; }
+  .stat-consumed .stat-value { color: var(--green); }
+  .stat-discarded .stat-value { color: var(--red); }
+  .stat-saved .stat-value { color: var(--amber); }
+
+  .waste-chart {
+    margin: 0 16px 16px;
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .waste-chart h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+
+  .chart-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .chart-label { font-size: 12px; color: var(--text-secondary); width: 50px; text-align: right; }
+
+  .chart-bar-bg {
+    flex: 1;
+    height: 20px;
+    background: #F5F5F5;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .chart-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+  }
+
+  .chart-pct { font-size: 12px; font-weight: 700; width: 36px; }
+
+  /* Settings / Household Screen */
+  .settings-section { padding: 0 16px 12px; }
+  .settings-section h3 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .member-card {
+    background: white;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow);
+  }
+
+  .member-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+  }
+
+  .member-info { flex: 1; }
+  .member-name { font-size: 15px; font-weight: 600; color: var(--text); }
+  .member-role { font-size: 12px; color: var(--text-secondary); }
+
+  .invite-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px;
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    color: var(--green);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    margin-bottom: 8px;
+    background: transparent;
+    width: 100%;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+
+  .invite-btn:hover { border-color: var(--green); background: #E8F5E9; }
+
+  .setting-row {
+    background: white;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+  }
+
+  .setting-row .setting-text { font-size: 14px; font-weight: 500; color: var(--text); }
+  .setting-row .setting-arrow { color: var(--text-secondary); }
+
+  .toggle-track {
+    width: 44px; height: 24px;
+    background: #BDBDBD;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .toggle-track.on { background: var(--green); }
+
+  .toggle-thumb {
+    width: 20px; height: 20px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: left 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  .toggle-track.on .toggle-thumb { left: 22px; }
+
+  /* Success toast */
+  .toast {
+    position: absolute;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--green);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 100;
+    white-space: nowrap;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Item detail overlay */
+  .detail-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: white;
+    border-radius: 20px 20px 0 0;
+    padding: 20px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    z-index: 50;
+  }
+
+  .detail-overlay.show { transform: translateY(0); }
+  .detail-overlay .detail-emoji { font-size: 40px; text-align: center; display: block; }
+  .detail-overlay .detail-name { font-size: 20px; font-weight: 700; text-align: center; margin: 4px 0; }
+  .detail-overlay .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #F5F5F5; font-size: 14px; }
+  .detail-overlay .detail-key { color: var(--text-secondary); }
+  .detail-overlay .detail-val { font-weight: 600; }
+
+  .detail-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .detail-actions button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .btn-consumed { background: #E8F5E9; color: var(--green); }
+  .btn-discarded { background: #FFEBEE; color: var(--red); }
+  .btn-close-detail { background: #F5F5F5; color: var(--text-secondary); }
+
+  /* Helper text */
+  .prototype-label {
+    text-align: center;
+    padding: 8px;
+    font-size: 11px;
+    color: #999;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+
+  <!-- ========== SCREEN 1: DASHBOARD ========== -->
+  <div class="screen active" id="screen-dashboard">
+    <div class="status-bar">
+      <span class="time">9:41</span>
+      <span class="icons">📶 🔋</span>
+    </div>
+    <div class="header">
+      <h1>Fresh<span>Check</span></h1>
+      <div class="header-icon" onclick="showScreen('screen-settings')">N</div>
+    </div>
+    <div class="sub-header">
+      <p>12 items tracked · Priya's Kitchen</p>
+    </div>
+    <div class="alert-banner" onclick="showScreen('screen-dashboard'); filterExpiring()">
+      <span class="alert-icon">⚠️</span>
+      <span class="alert-text">3 items expiring soon</span>
+      <span class="alert-count">3</span>
+    </div>
+    <div class="location-tabs">
+      <div class="location-tab active" onclick="selectTab(this)">All</div>
+      <div class="location-tab" onclick="selectTab(this)">🧊 Fridge</div>
+      <div class="location-tab" onclick="selectTab(this)">❄️ Freezer</div>
+      <div class="location-tab" onclick="selectTab(this)">🏪 Pantry</div>
+    </div>
+    <div class="item-list" id="item-list">
+      <div class="section-label">⚠️ Expiring Soon</div>
+      <div class="item-card" onclick="showDetail('🥛','Whole Milk','Fridge · 1L','Tomorrow','red')">
+        <span class="item-emoji">🥛</span>
+        <div class="item-info">
+          <div class="item-name">Whole Milk</div>
+          <div class="item-meta">Fridge · 1L</div>
+        </div>
+        <span class="expiry-badge expiry-red">1 day</span>
+      </div>
+      <div class="item-card" onclick="showDetail('🥬','Spinach','Fridge · 1 bunch','2 days left','red')">
+        <span class="item-emoji">🥬</span>
+        <div class="item-info">
+          <div class="item-name">Spinach</div>
+          <div class="item-meta">Fridge · 1 bunch</div>
+        </div>
+        <span class="expiry-badge expiry-red">2 days</span>
+      </div>
+      <div class="item-card" onclick="showDetail('🍞','Whole Wheat Bread','Pantry · 1 loaf','2 days left','amber')">
+        <span class="item-emoji">🍞</span>
+        <div class="item-info">
+          <div class="item-name">Whole Wheat Bread</div>
+          <div class="item-meta">Pantry · 1 loaf</div>
+        </div>
+        <span class="expiry-badge expiry-amber">2 days</span>
+      </div>
+
+      <div class="section-label">🧊 Fridge</div>
+      <div class="item-card" onclick="showDetail('🥚','Eggs','Fridge · 6 pcs','5 days left','amber')">
+        <span class="item-emoji">🥚</span>
+        <div class="item-info">
+          <div class="item-name">Eggs</div>
+          <div class="item-meta">Fridge · 6 pcs</div>
+        </div>
+        <span class="expiry-badge expiry-amber">5 days</span>
+      </div>
+      <div class="item-card" onclick="showDetail('🧀','Cheddar Cheese','Fridge · 200g','8 days left','green')">
+        <span class="item-emoji">🧀</span>
+        <div class="item-info">
+          <div class="item-name">Cheddar Cheese</div>
+          <div class="item-meta">Fridge · 200g</div>
+        </div>
+        <span class="expiry-badge expiry-green">8 days</span>
+      </div>
+      <div class="item-card" onclick="showDetail('🥕','Carrots','Fridge · 500g','10 days left','green')">
+        <span class="item-emoji">🥕</span>
+        <div class="item-info">
+          <div class="item-name">Carrots</div>
+          <div class="item-meta">Fridge · 500g</div>
+        </div>
+        <span class="expiry-badge expiry-green">10 days</span>
+      </div>
+
+      <div class="section-label">❄️ Freezer</div>
+      <div class="item-card" onclick="showDetail('🍗','Chicken Breast','Freezer · 500g','21 days left','green')">
+        <span class="item-emoji">🍗</span>
+        <div class="item-info">
+          <div class="item-name">Chicken Breast</div>
+          <div class="item-meta">Freezer · 500g</div>
+        </div>
+        <span class="expiry-badge expiry-green">21 days</span>
+      </div>
+      <div class="item-card" onclick="showDetail('🫛','Frozen Peas','Freezer · 400g','30 days left','green')">
+        <span class="item-emoji">🫛</span>
+        <div class="item-info">
+          <div class="item-name">Frozen Peas</div>
+          <div class="item-meta">Freezer · 400g</div>
+        </div>
+        <span class="expiry-badge expiry-green">30 days</span>
+      </div>
+
+      <div class="section-label">🏪 Pantry</div>
+      <div class="item-card" onclick="showDetail('🍚','Basmati Rice','Pantry · 1kg','60 days left','green')">
+        <span class="item-emoji">🍚</span>
+        <div class="item-info">
+          <div class="item-name">Basmati Rice</div>
+          <div class="item-meta">Pantry · 1kg</div>
+        </div>
+        <span class="expiry-badge expiry-green">60 days</span>
+      </div>
+      <div class="item-card" onclick="showDetail('🥫','Canned Tomatoes','Pantry · 2 cans','90 days left','green')">
+        <span class="item-emoji">🥫</span>
+        <div class="item-info">
+          <div class="item-name">Canned Tomatoes</div>
+          <div class="item-meta">Pantry · 2 cans</div>
+        </div>
+        <span class="expiry-badge expiry-green">90 days</span>
+      </div>
+      <div class="item-card" onclick="showDetail('🫒','Olive Oil','Pantry · 500ml','120 days left','green')">
+        <span class="item-emoji">🫒</span>
+        <div class="item-info">
+          <div class="item-name">Olive Oil</div>
+          <div class="item-meta">Pantry · 500ml</div>
+        </div>
+        <span class="expiry-badge expiry-green">120 days</span>
+      </div>
+    </div>
+
+    <!-- Item Detail Overlay -->
+    <div class="detail-overlay" id="detail-overlay">
+      <span class="detail-emoji" id="det-emoji"></span>
+      <div class="detail-name" id="det-name"></div>
+      <div class="detail-row"><span class="detail-key">Location</span><span class="detail-val" id="det-loc"></span></div>
+      <div class="detail-row"><span class="detail-key">Expires in</span><span class="detail-val" id="det-exp"></span></div>
+      <div class="detail-row"><span class="detail-key">Added</span><span class="detail-val">Apr 10, 2026</span></div>
+      <div class="detail-actions">
+        <button class="btn-consumed" onclick="itemAction('consumed')">✓ Consumed</button>
+        <button class="btn-discarded" onclick="itemAction('discarded')">✗ Discarded</button>
+        <button class="btn-close-detail" onclick="hideDetail()">Close</button>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active" onclick="showScreen('screen-dashboard')">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Home</span>
+      </div>
+      <div class="nav-item" onclick="showScreen('screen-stats')">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Stats</span>
+      </div>
+      <div class="nav-add" onclick="showScreen('screen-add')">+</div>
+      <div class="nav-item" onclick="showScreen('screen-settings')">
+        <span class="nav-icon">👥</span>
+        <span class="nav-label">Household</span>
+      </div>
+      <div class="nav-item" onclick="showScreen('screen-settings')">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Settings</span>
+      </div>
+    </div>
+
+    <div class="toast" id="toast-dashboard"></div>
+  </div>
+
+  <!-- ========== SCREEN 2: ADD ITEM ========== -->
+  <div class="screen" id="screen-add">
+    <div class="status-bar">
+      <span class="time">9:41</span>
+      <span class="icons">📶 🔋</span>
+    </div>
+    <div class="screen-header">
+      <span class="back-btn" onclick="showScreen('screen-dashboard')">‹</span>
+      <h2>Add Item</h2>
+    </div>
+    <div class="form-body">
+      <div class="form-group">
+        <label class="form-label">Item Name</label>
+        <input class="form-input" id="item-name-input" type="text" placeholder="e.g. Greek Yogurt" oninput="handleAutocomplete(this.value)">
+        <div class="autocomplete-list" id="autocomplete">
+          <div class="autocomplete-item" onclick="pickSuggestion('🥛 Greek Yogurt')">🥛 Greek Yogurt</div>
+          <div class="autocomplete-item" onclick="pickSuggestion('🧈 Greek Feta')">🧈 Greek Feta</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Storage Location</label>
+        <div class="storage-options">
+          <div class="storage-option selected" onclick="selectStorage(this)">
+            <span class="storage-icon">🧊</span>
+            <span class="storage-name">Fridge</span>
+          </div>
+          <div class="storage-option" onclick="selectStorage(this)">
+            <span class="storage-icon">❄️</span>
+            <span class="storage-name">Freezer</span>
+          </div>
+          <div class="storage-option" onclick="selectStorage(this)">
+            <span class="storage-icon">🏪</span>
+            <span class="storage-name">Pantry</span>
+          </div>
+        </div>
+      </div>
+      <div class="date-row">
+        <div class="form-group">
+          <label class="form-label">Purchased</label>
+          <input class="form-input" type="date" value="2026-04-14">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Expires</label>
+          <input class="form-input" type="date" value="2026-04-21" id="expiry-input">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quick Expiry</label>
+        <div class="quick-expiry">
+          <span class="quick-chip" onclick="selectChip(this, 3)">3 days</span>
+          <span class="quick-chip selected" onclick="selectChip(this, 7)">1 week</span>
+          <span class="quick-chip" onclick="selectChip(this, 14)">2 weeks</span>
+          <span class="quick-chip" onclick="selectChip(this, 30)">1 month</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quantity</label>
+        <div class="qty-row">
+          <button class="qty-btn" onclick="changeQty(-1)">−</button>
+          <span class="qty-value" id="qty-val">1</span>
+          <button class="qty-btn" onclick="changeQty(1)">+</button>
+        </div>
+      </div>
+      <button class="submit-btn" onclick="submitItem()">Add to Kitchen →</button>
+    </div>
+    <div class="toast" id="toast-add"></div>
+  </div>
+
+  <!-- ========== SCREEN 3: STATS ========== -->
+  <div class="screen" id="screen-stats">
+    <div class="status-bar">
+      <span class="time">9:41</span>
+      <span class="icons">📶 🔋</span>
+    </div>
+    <div class="screen-header">
+      <span class="back-btn" onclick="showScreen('screen-dashboard')">‹</span>
+      <h2>Waste Stats</h2>
+    </div>
+    <div class="sub-header">
+      <p>April 2026 · Priya's Kitchen</p>
+    </div>
+    <div class="stats-summary">
+      <div class="stat-card stat-consumed">
+        <div class="stat-value">38</div>
+        <div class="stat-label">Consumed</div>
+      </div>
+      <div class="stat-card stat-discarded">
+        <div class="stat-value">4</div>
+        <div class="stat-label">Discarded</div>
+      </div>
+      <div class="stat-card stat-saved">
+        <div class="stat-value">$23</div>
+        <div class="stat-label">Saved</div>
+      </div>
+    </div>
+    <div class="waste-chart">
+      <h3>Consumption Rate by Category</h3>
+      <div class="chart-bar-row">
+        <span class="chart-label">Dairy</span>
+        <div class="chart-bar-bg"><div class="chart-bar-fill" style="width:85%;background:var(--green)"></div></div>
+        <span class="chart-pct" style="color:var(--green)">85%</span>
+      </div>
+      <div class="chart-bar-row">
+        <span class="chart-label">Veggies</span>
+        <div class="chart-bar-bg"><div class="chart-bar-fill" style="width:72%;background:var(--green-light)"></div></div>
+        <span class="chart-pct" style="color:var(--green-light)">72%</span>
+      </div>
+      <div class="chart-bar-row">
+        <span class="chart-label">Meat</span>
+        <div class="chart-bar-bg"><div class="chart-bar-fill" style="width:95%;background:var(--green)"></div></div>
+        <span class="chart-pct" style="color:var(--green)">95%</span>
+      </div>
+      <div class="chart-bar-row">
+        <span class="chart-label">Bread</span>
+        <div class="chart-bar-bg"><div class="chart-bar-fill" style="width:60%;background:var(--amber)"></div></div>
+        <span class="chart-pct" style="color:var(--amber)">60%</span>
+      </div>
+      <div class="chart-bar-row">
+        <span class="chart-label">Fruits</span>
+        <div class="chart-bar-bg"><div class="chart-bar-fill" style="width:50%;background:var(--red)"></div></div>
+        <span class="chart-pct" style="color:var(--red)">50%</span>
+      </div>
+    </div>
+    <div class="waste-chart">
+      <h3>Weekly Trend</h3>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">Items discarded per week</p>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:80px;padding:0 8px;">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="background:var(--red);width:100%;border-radius:4px;height:60px;opacity:0.7"></div>
+          <span style="font-size:10px;color:var(--text-secondary)">W1</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="background:var(--amber);width:100%;border-radius:4px;height:40px;opacity:0.7"></div>
+          <span style="font-size:10px;color:var(--text-secondary)">W2</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="background:var(--green-light);width:100%;border-radius:4px;height:20px;opacity:0.7"></div>
+          <span style="font-size:10px;color:var(--text-secondary)">W3</span>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="background:var(--green);width:100%;border-radius:4px;height:10px;opacity:0.7"></div>
+          <span style="font-size:10px;color:var(--text-secondary)">W4</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="showScreen('screen-dashboard')">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Home</span>
+      </div>
+      <div class="nav-item active" onclick="showScreen('screen-stats')">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Stats</span>
+      </div>
+      <div class="nav-add" onclick="showScreen('screen-add')">+</div>
+      <div class="nav-item" onclick="showScreen('screen-settings')">
+        <span class="nav-icon">👥</span>
+        <span class="nav-label">Household</span>
+      </div>
+      <div class="nav-item" onclick="showScreen('screen-settings')">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Settings</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SCREEN 4: SETTINGS / HOUSEHOLD ========== -->
+  <div class="screen" id="screen-settings">
+    <div class="status-bar">
+      <span class="time">9:41</span>
+      <span class="icons">📶 🔋</span>
+    </div>
+    <div class="screen-header">
+      <span class="back-btn" onclick="showScreen('screen-dashboard')">‹</span>
+      <h2>Settings</h2>
+    </div>
+
+    <div class="settings-section">
+      <h3>Household Members</h3>
+      <div class="member-card">
+        <div class="member-avatar" style="background:var(--green)">P</div>
+        <div class="member-info">
+          <div class="member-name">Priya (You)</div>
+          <div class="member-role">Owner · Joined Mar 2026</div>
+        </div>
+      </div>
+      <div class="member-card">
+        <div class="member-avatar" style="background:#7B1FA2">R</div>
+        <div class="member-info">
+          <div class="member-name">Rohan</div>
+          <div class="member-role">Member · Joined Apr 2026</div>
+        </div>
+      </div>
+      <button class="invite-btn" onclick="showToast('toast-settings','Invitation link copied!')">+ Invite Member</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>Notifications</h3>
+      <div class="setting-row">
+        <span class="setting-text">Expiry reminders</span>
+        <div class="toggle-track on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+      </div>
+      <div class="setting-row">
+        <span class="setting-text">Alert window</span>
+        <span class="setting-arrow" style="font-weight:600;color:var(--green)">2 days ›</span>
+      </div>
+      <div class="setting-row">
+        <span class="setting-text">Daily summary</span>
+        <div class="toggle-track" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Account</h3>
+      <div class="setting-row">
+        <span class="setting-text">Edit profile</span>
+        <span class="setting-arrow">›</span>
+      </div>
+      <div class="setting-row">
+        <span class="setting-text">Export my data</span>
+        <span class="setting-arrow">›</span>
+      </div>
+      <div class="setting-row">
+        <span class="setting-text">Delete account</span>
+        <span class="setting-arrow" style="color:var(--red)">›</span>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="showScreen('screen-dashboard')">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Home</span>
+      </div>
+      <div class="nav-item" onclick="showScreen('screen-stats')">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Stats</span>
+      </div>
+      <div class="nav-add" onclick="showScreen('screen-add')">+</div>
+      <div class="nav-item active" onclick="showScreen('screen-settings')">
+        <span class="nav-icon">👥</span>
+        <span class="nav-label">Household</span>
+      </div>
+      <div class="nav-item active" onclick="showScreen('screen-settings')">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Settings</span>
+      </div>
+    </div>
+    <div class="toast" id="toast-settings"></div>
+  </div>
+
+</div>
+
+<script>
+  // Screen navigation
+  function showScreen(id) {
+    hideDetail();
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // Location tab selection
+  function selectTab(el) {
+    document.querySelectorAll('.location-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  // Storage selection in add form
+  function selectStorage(el) {
+    document.querySelectorAll('.storage-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  // Quick expiry chip
+  function selectChip(el, days) {
+    document.querySelectorAll('.quick-chip').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    document.getElementById('expiry-input').value = d.toISOString().split('T')[0];
+  }
+
+  // Quantity
+  let qty = 1;
+  function changeQty(delta) {
+    qty = Math.max(1, qty + delta);
+    document.getElementById('qty-val').textContent = qty;
+  }
+
+  // Autocomplete
+  function handleAutocomplete(val) {
+    const ac = document.getElementById('autocomplete');
+    ac.classList.toggle('show', val.length >= 2);
+  }
+
+  function pickSuggestion(text) {
+    document.getElementById('item-name-input').value = text.slice(2).trim();
+    document.getElementById('autocomplete').classList.remove('show');
+  }
+
+  // Submit item
+  function submitItem() {
+    showToast('toast-add', 'Item added to kitchen!');
+    setTimeout(() => showScreen('screen-dashboard'), 1200);
+  }
+
+  // Toast
+  function showToast(id, msg) {
+    const t = document.getElementById(id);
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  // Item detail
+  function showDetail(emoji, name, loc, exp, urgency) {
+    document.getElementById('det-emoji').textContent = emoji;
+    document.getElementById('det-name').textContent = name;
+    document.getElementById('det-loc').textContent = loc;
+    document.getElementById('det-exp').textContent = exp;
+    document.getElementById('detail-overlay').classList.add('show');
+  }
+
+  function hideDetail() {
+    document.getElementById('detail-overlay').classList.remove('show');
+  }
+
+  function itemAction(action) {
+    hideDetail();
+    const msg = action === 'consumed' ? 'Marked as consumed' : 'Marked as discarded';
+    showToast('toast-dashboard', msg);
+  }
+
+  function filterExpiring() {
+    // Visual feedback only for prototype
+  }
+</script>
+
+</body>
+</html>
